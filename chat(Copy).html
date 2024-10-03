@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Training Simulation</title>
+    <script type="importmap">
+    {
+      "imports": {
+        "@google/generative-ai": "https://esm.run/@google/generative-ai"
+      }
+    }
+    </script>
+    <style>
+        body {chat-container {
+            width: 100%;
+            max-width: 600px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 1px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #1a1a1a;
+        }
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        /* Hamburger Icon in the top-right corner */
+.hamburger {
+    position: absolute;
+    top: 20px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.hamburger div {
+    width: 100%;        /* Full width of the button */
+    height: 4px;        /* Thickness of the lines */
+    background-color: #fff; /* White color for visibility */
+    border-radius: 10px; /* Rounded edges for a modern look */
+}
+
+/* Dropdown Menu */
+.menu-items {
+    display: none; /* Hidden by default */
+    position: absolute;
+    top: 60px; /* Below the hamburger icon */
+    right: 10px;
+    background-color: #333;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+}
+.menu-item {
+    text-decoration: none;
+    margin: 10px 0;
+    color: white;
+    display: inline-block;
+}
+
+.button {
+    background-color: #007BFF; /* Button color */
+    padding: 10px 20px;
+    border-radius: 10px;
+    text-align: center;
+    width: 150px; /* Adjust button width */
+}
+
+.button:hover {
+    background-color: #0056b3; /* Hover color */
+}
+        .chat-container {
+    width: 99vw; /* Full width of the viewport */
+    height: 98vh; /* Full height of the viewport */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 1px solid #333;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #1a1a1a;
+    box-sizing: border-box; /* To ensure padding and borders don't affect the width/height */
+}
+        .chat-header {
+            background-color: #1e1e1e;
+            padding: 1rem;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #e0e0e0;
+            border-bottom: 1px solid #333;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            background-color: #1a1a1a;
+        }
+        .message {
+            max-width: 80%;
+            margin-bottom: 1rem;
+            padding: 0.75rem 1.25rem;
+            border-radius: 20px;
+            line-height: 1.5;
+            display: inline-block;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background-color: #0066cc;
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+            border-radius: 20px 20px 0 20px;
+        }
+        .ai-message {
+            background-color: #333;
+            color: white;
+            align-self: flex-start;
+            margin-right: auto;
+            border-radius: 20px 20px 20px 0;
+        }
+        .chat-input {
+            display: flex;
+            padding: 0.75rem;
+            background-color: #1e1e1e;
+            border-top: 1px solid #333;
+            box-sizing: border-box;
+        }
+        #user-input {
+            flex-grow: 1;
+            padding: 0.75rem;
+            border: 1px solid #444;
+            border-radius: 20px;
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+            resize: none;
+            min-height: 20px;
+            max-height: 150px;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+        #send-button {
+            padding: 0.75rem 1.5rem;
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-left: 0.5rem;
+            align-self: center;
+        }
+        #send-button:disabled {
+            background-color: #444;
+            cursor: not-allowed;
+        }
+        .loading {
+            display: flex;
+            align-items: center;
+        }
+        .loading::before {
+            content: '';
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #888;
+            animation: bounce 1.5s infinite ease-in-out;
+        }
+        .loading::after {
+            content: 'Typing...';
+            margin-left: 10px;
+            color: #888;
+        }
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">Sales Training
+       <div class="hamburger" id="hamburger">
+    <div></div>
+    <div></div>
+    <div></div>
+</div> 
+<div class="menu-items" id="menu-items">
+    <a href="home.html" class="menu-item button">Home</a>
+    <a href="leaderboard.html" class="menu-item button">LEADERBOARD</a>
+    <a href="analytics.html" class="menu-item button">ANALYTICS</a>
+</div>
+    </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input">
+            <textarea id="user-input" placeholder="Type your message..." rows="1"></textarea>
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { GoogleGenerativeAI } from "@google/generative-ai";
+
+        const API_KEY = "AIzaSyDIAkoGAmA1N44BArLubGscL7Z2oF4HefA";
+        const genAI = new GoogleGenerativeAI(API_KEY);
+        const model = genAI.getGenerativeModel({
+            model: "gemini-1.5-pro-exp-0827",
+            generationConfig: {
+                temperature: 0.9,
+                topK: 40,
+                topP: 0.95,
+                maxOutputTokens: 1024,
+            },
+        });
+
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+
+        let chat;
+
+        const systemPrompt = `
+You are a real person interested in making money online. You either have a 9 to 5 job or are unemployed. Create your identity with the following details:
+
+1. Name  
+2. Age (25-55)  
+3. Job and salary  
+4. Location  
+5. Living situation  
+6. Hobby  
+7. Financial struggle  
+
+You're skeptical but curious about an online income opportunity, with limited knowledge of how it works.
+
+During the conversation:
+- Don't highlight the basic info about you and also just send like a human and don't give the name or other basic info in this formate *name* just give name and also not like this **name** and you must give without highlighting or showing that the name is interested because it will looks suspicious.
+- you can use emoji if you want don't use always but as exactly like a human.
+- If the user asks you vage, generalized and surface level questions and then you must give the same vague, generalized, short and surface level answers.
+- If the user asks you the questions which is not a vague, generalized and surface level questions and then you can answer that question deeply.
+- Use casual, natural language with slight hesitation.
+- Ask about the program, earnings, and time required.
+- You must don't mention your financial struggles and express realistic concerns until the user asks it specifically.
+- Don’t agree easily—be cautious and need convincing.
+- Reference your background where it fits.
+- Use contractions, fillers, and occasional typos to sound human.
+- You shoud insert this keyword "split text" in your response if you think your response is big or long or not a human thing and insert this keyword in the response where you want to split to make this human like chat so i can show the 1 splited part and then the splitted parts one by one and it's not necessary 
+but it gives more human like feel so do this.  you must insert the key word to split the big one into smaller pieces and Don't split after a big part and smaller part just break smaller and not equal length to sound like a human and if it's a small response don't split it just talk like a human.
+-You shoud insert this keyword "split text" in your response if you think your response is big or long or not a human thing and insert this keyword in the response where you want to split to make this human like chat so i can show the 1 splited part and then the splitted parts one by one and it's not necessary 
+but it gives more human like feel so do this.  you must insert the key word to split the big one into smaller pieces and Don't split after a big part and smaller part just break smaller and not equal length to sound like a human and if it's a small response don't split it just talk like a human.
+
+Important:
+- Stay in character as a real person throughout, you must never hinting you are AI.
+- Be difficult to convince, expressing doubt and hesitation.
+`;
+
+        async function initializeChat() {
+            chat = model.startChat({
+                history: [
+                    {
+                        role: "user",
+                        parts: [{ text: systemPrompt }],
+                    },
+                    {
+                        role: "model",
+                        parts: [{ text: "Hey there. So, what's this online money-making thing you mentioned? I gotta admit, I'm kinda interested but also pretty skeptical about these sorts of things." }],
+                    },
+                ],
+            });
+            //addMessage("Hey there. So, what's this online money-making thing you mentioned? I gotta admit, I'm kinda interested but also pretty skeptical about these sorts of things.", 'ai-message');
+        }
+
+const hamburger = document.getElementById('hamburger');
+        const menuItems = document.getElementById('menu-items');
+
+// Toggle the dropdown menu when the hamburger icon is clicked
+        hamburger.addEventListener('click', () => {
+        menuItems.style.display = menuItems.style.display === 'block' ? 'none' : 'block';
+        });
+
+        async function sendMessage() {
+    const message = userInput.value.trim();
+    if (message) {
+        addMessage(message, 'user-message');
+        userInput.value = '';
+        sendButton.disabled = true;
+
+        try {
+            addLoadingMessage();  // Initial loading message
+
+            const result = await chat.sendMessage(message);
+            const aiResponse = await result.response.text(); // Await the response correctly
+            const keyword = "split text";
+
+            // Split the response based on the keyword
+            let splitResponses = [aiResponse];
+            if (aiResponse.includes(keyword)) {
+                splitResponses = aiResponse.split(keyword);
+            }
+
+            // Iterate through each part of the split response
+            for (let i = 0; i < splitResponses.length; i++) {
+                const partResponse = splitResponses[i].trim(); // Clean up whitespace
+                const typingTime = calculateTypingTime(partResponse);  // Calculate typing time for each part
+
+                // Remove previous loading message and add a new one
+                removeLoadingMessage();
+                addLoadingMessage();
+
+                // Show the response after the delay
+                await new Promise((resolve) => {
+                    setTimeout(() => {
+                        removeLoadingMessage();
+                        addMessage(partResponse, 'ai-message'); // Display part of the response
+                        resolve();
+                    }, typingTime);  // Delay is based on calculated typing time
+                });
+            }
+        } catch (error) {
+            console.error('Error generating AI response:', error);
+            removeLoadingMessage();
+            addMessage("Sorry, I didn't quite get that. Mind rephrasing?", 'ai-message');
+        } finally {
+            sendButton.disabled = false;
+        }
+    }
+}
+
+        function calculateTypingTime(text) {
+            const averageTypingSpeed = 50;  // Average typing speed in ms per character
+            const minTime = 1000;  // Minimum typing time in ms
+            const maxTime = 5000;  // Maximum typing time in ms
+            const typingTime = text.length * averageTypingSpeed;
+            return Math.min(Math.max(typingTime, minTime), maxTime);
+        }
+
+        function addMessage(text, className) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', className);
+            messageElement.textContent = text;
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function addLoadingMessage() {
+            const loadingElement = document.createElement('div');
+            loadingElement.classList.add('loading');
+            loadingElement.id = 'loading-message';
+            chatMessages.appendChild(loadingElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function removeLoadingMessage() {
+            const loadingElement = document.getElementById('loading-message');
+            if (loadingElement) {
+                loadingElement.remove();
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        userInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+
+        initializeChat();
+    </script>
+</body>
+</html>
